@@ -7,6 +7,7 @@ from extractor import BasicEncoder
 from corr import CorrBlock
 from utils.utils import bilinear_sampler, coords_grid, upflow8
 from gma import Attention, Aggregate
+import argparse
 
 try:
     autocast = torch.cuda.amp.autocast
@@ -24,21 +25,28 @@ except:
 
 
 class RAFTGMA(nn.Module):
-    def __init__(self, args):
+    def __init__(self, flow_estimator_obj):
         super().__init__()
-        self.args = args
+        parser = argparse.ArgumentParser()
+        self.args = parser.parse_args()
+        self.args.mixed_precision = flow_estimator_obj.mixed_precision
+        self.args.model = flow_estimator_obj.model
+        self.args.model_name = flow_estimator_obj.model
+        self.args.num_heads = flow_estimator_obj.num_heads
+        self.args.position_and_content = flow_estimator_obj.position_and_content
+        self.args.position_only = flow_estimator_obj.position_only
 
         self.hidden_dim = hdim = 128
         self.context_dim = cdim = 128
-        args.corr_levels = 4
-        args.corr_radius = 4
+        self.args.corr_levels = 4
+        self.args.corr_radius = 4
 
         if 'dropout' not in self.args:
             self.args.dropout = 0
 
         # feature network, context network, and update block
-        self.fnet = BasicEncoder(output_dim=256, norm_fn='instance', dropout=args.dropout)
-        self.cnet = BasicEncoder(output_dim=hdim + cdim, norm_fn='batch', dropout=args.dropout)
+        self.fnet = BasicEncoder(output_dim=256, norm_fn='instance', dropout=self.args.dropout)
+        self.cnet = BasicEncoder(output_dim=hdim + cdim, norm_fn='batch', dropout=self.args.dropout)
         self.update_block = GMAUpdateBlock(self.args, hidden_dim=hdim)
         self.att = Attention(args=self.args, dim=cdim, heads=self.args.num_heads, max_pos_size=160, dim_head=cdim)
 
