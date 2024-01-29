@@ -28,10 +28,10 @@ class RAFTGMA(nn.Module):
     def __init__(self, flow_estimator_obj):
         super().__init__()
         parser = argparse.ArgumentParser()
-        self.args = parser.parse_args()
+        self.args = parser
         self.args.mixed_precision = flow_estimator_obj.mixed_precision
-        self.args.model = flow_estimator_obj.model
-        self.args.model_name = flow_estimator_obj.model
+        # self.args.model = flow_estimator_obj.model
+        self.args.model_name = flow_estimator_obj.model_name
         self.args.num_heads = flow_estimator_obj.num_heads
         self.args.position_and_content = flow_estimator_obj.position_and_content
         self.args.position_only = flow_estimator_obj.position_only
@@ -41,8 +41,8 @@ class RAFTGMA(nn.Module):
         self.args.corr_levels = 4
         self.args.corr_radius = 4
 
-        if 'dropout' not in self.args:
-            self.args.dropout = 0
+        # if 'dropout' not in self.args:
+        self.args.dropout = 0
 
         # feature network, context network, and update block
         self.fnet = BasicEncoder(output_dim=256, norm_fn='instance', dropout=self.args.dropout)
